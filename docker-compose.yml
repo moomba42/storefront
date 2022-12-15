@@ -1,0 +1,124 @@
+---
+version: '3'
+services:
+  postgres-keycloak:
+    container_name: postgres-keycloak
+    image: postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
+    volumes:
+      - ./postgres-keycloak:/data/postgres
+    restart: unless-stopped
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:20.0.2
+    command: ["start-dev", "--import-realm"]
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres-keycloak
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_SCHEMA: public
+      DB_PASSWORD: password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak-realms:/opt/keycloak/data/import/
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-keycloak
+    restart: unless-stopped
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+  discovery-service:
+    image: registry.hub.docker.com/moomba/discovery-service
+    container_name: discovery-service
+    environment:
+      - SERVER_PORT=8761
+      - SPRING_PROFILES_ACTIVE=docker
+      - ZIPKIN_BASE_URL=http://zipkin:9411
+    depends_on:
+      - zipkin
+  api-gateway:
+    image: registry.hub.docker.com/moomba/api-gateway
+    container_name: api-gateway
+    ports:
+      - "8181:8181"
+    environment:
+      - SERVER_PORT=8181
+      - SPRING_PROFILES_ACTIVE=docker
+      - APPLICATION_NAME=${API_GATEWAY_APPLICATION_NAME}
+      - ORDER_SERVICE_APPLICATION_NAME=${ORDER_SERVICE_APPLICATION_NAME}
+      - PRODUCT_SERVICE_APPLICATION_NAME=${PRODUCT_SERVICE_APPLICATION_NAME}
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=TRACE
+      - DISCOVERY_SERVICE_BASE_URL=http://discovery-service:8761
+      - ZIPKIN_BASE_URL=http://zipkin:9411
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/storefront-realm
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+    depends_on:
+      - zipkin
+      - discovery-service
+      - keycloak
+  postgres-order-service:
+    container_name: postgres-order-service
+    image: postgres
+    environment:
+      POSTGRES_DB: order-service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      PGDATA: /data/postgres
+    volumes:
+      - ./postgres-order-service:/data/postgres
+    restart: unless-stopped
+  mongo-product-service:
+    container_name: mongo-product-service
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    volumes:
+      - ./mongo-product-service:/data/db
+    restart: unless-stopped
+  product-service:
+    image: registry.hub.docker.com/moomba/product-service
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=docker
+      - APPLICATION_NAME=${PRODUCT_SERVICE_APPLICATION_NAME}
+      - MONGODB_HOST=mongo-product-service
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=product-service
+      - MONGODB_USERNAME=root
+      - MONGODB_PASSWORD=secret
+      - MONGODB_AUTH_DATABASE=admin
+      - ZIPKIN_BASE_URL=http://zipkin:9411
+      - DISCOVERY_SERVICE_BASE_URL=http://discovery-service:8761
+    depends_on:
+      - mongo-product-service
+      - discovery-service
+      - api-gateway
+  order-service:
+    image: registry.hub.docker.com/moomba/order-service
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=docker
+      - APPLICATION_NAME=${ORDER_SERVICE_APPLICATION_NAME}
+      - POSTGRES_HOST=postgres-order-service
+      - POSTGRES_PORT=5432
+      - POSTGRES_DATABASE=order-service
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=secret
+      - ZIPKIN_BASE_URL=http://zipkin:9411
+      - DISCOVERY_SERVICE_BASE_URL=http://discovery-service:8761
+    depends_on:
+      - postgres-order-service
+      - discovery-service
+      - api-gateway
+      - zipkin

@@ -1,0 +1,8 @@
+POST {{host}}/api/v1/order
+Content-Type: application/json
+Cookie: SESSION=80b7037d-db79-45a6-ac71-1eb95e39fb2d
+
+{
+  "productIds": ["6399ffee64092a39df22f846"]
+}
+###

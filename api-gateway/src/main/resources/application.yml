@@ -1,0 +1,56 @@
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway.route.RouteDefinitionLocator: INFO
+    org.springframework.cloud.gateway: TRACE
+server:
+  port: ${SERVER_PORT:8079}
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_BASE_URL:http://localhost:8761}/eureka
+spring:
+  application:
+    name: ${APPLICATION_NAME:api-gateway}
+  zipkin:
+    base-url: ${ZIPKIN_BASE_URL:http://localhost:9411}
+  sleuth:
+    sampler:
+      probability: 1.0
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak-provider:
+            user-name-attribute: preferred_username
+            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8078/realms/storefront-realm}
+        registration:
+          keycloak-api-gateway-client:
+            provider: keycloak-provider
+            client-id: api-gateway-client
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:REPLACE_THIS}
+            authorization-grant-type: authorization_code
+            redirect-uri: '{baseUrl}/login/oauth2/code/keycloak'
+            scope:
+              - openid
+  cloud:
+    gateway:
+      routes:
+        - id: product-service
+          uri: lb://${PRODUCT_SERVICE_APPLICATION_NAME:product-service}
+          predicates:
+            - Path=/api/v1/product
+        - id: order-service
+          uri: lb://${ORDER_SERVICE_APPLICATION_NAME:order-service}
+          predicates:
+            - Path=/api/v1/order
+        - id: discovery-service
+          uri: ${DISCOVERY_SERVICE_BASE_URL:http://localhost:8761}
+          predicates:
+            - Path=/eureka/web
+          filters:
+            - SetPath=/
+        - id: discovery-service-static
+          uri: ${DISCOVERY_SERVICE_BASE_URL:http://localhost:8761}
+          predicates:
+            - Path=/eureka/**

@@ -1,0 +1,29 @@
+POST {{host}}/api/v1/product
+Content-Type: application/json
+Cookie: SESSION=80b7037d-db79-45a6-ac71-1eb95e39fb2d
+
+{
+  "developer": "Aleksander Długosz",
+  "publisher": "Aleksander Długosz",
+  "releaseDate": "2022-10-10",
+  "localizedPages": {
+    "en_US": {
+      "title": "Fiend Slayer",
+      "description": "Slay fiends in this co-op adventure game.",
+      "galleryImageIds": [],
+      "tags": ["co-op", "hack&slash"]
+    }
+  },
+  "localizedPrices": {
+    "USA": {
+      "currency": "USD",
+      "amount": 2900
+    }
+  }
+}
+###
+
+GET {{host}}/api/v1/product
+Cookie: SESSION=80b7037d-db79-45a6-ac71-1eb95e39fb2d
+
+###
