@@ -1,7 +1,7 @@
 ## Building required images to the Docker daemon
 > Make sure you have a running [Docker](https://www.docker.com/) environment on your system.
 
-Building, compiling and testing of each microservice is handled by Maven. Compiling each microservice into a docker image and pushing it to the local docker daemon is also handled by Maven through the Google's JIB plugin. 
+Building, compiling, and testing each microservice is handled by Maven. Compiling each microservice into a docker image and pushing it to the local docker daemon is also handled by Maven through Google's JIB plugin. 
 
 To compile each microservice and then push the images to the local docker daemon, run the following command from the root of the repository `/storefront`:
 
@@ -22,7 +22,7 @@ registry.hub.docker.com/moomba/order-service       latest
 
 
 ## Routing keycloak to localhost
-Due to time constraints, no reverse proxy for keycloak has been set up. Because of this, we have to reroute any request to the "keycloak" host to our localhost address in a more basic manner. This will allow the `api-gateway` service to properly redirect us to the keycloak login page.
+Due to time constraints, no reverse proxy for KeyCloak has been set up. Because of this, we have to reroute any request to the "keycloak" host to our localhost address in a more basic manner. This basic rerouting will allow the `api-gateway` service to redirect us to the keycloak login page properly.
 
 Below are the instructions for each platform:
 
@@ -63,9 +63,9 @@ You should see all the containers being started one by one:
  ⠿ Container storefront-product-service-2  Started
 ```
 
-The startup time may vary from system to system, but usually its good to give it around 2 minutes.\
+The startup time may vary from system to system, but usually, it's good to give it around 2 minutes.\
 To verify that the system is up, head over to [`http://localhost:8181/eureka/web`](http://localhost:8181/eureka/web) and confirm that all the microservices are up.
-When asked to log in with keycloak, input `"test"` as both the username and password, and then submit.\
-After this you should be redirected back to the eureka dashboard, and the following should now be visible:
+When asked to log in with KeyCloak, input `"test"` as both the username and password, and then submit.\
+After this, you should be redirected back to the eureka dashboard, and the following should now be visible:
 
 ![Eureka dashboard instances](.images/instances.png "Eureka dashboard instances")
