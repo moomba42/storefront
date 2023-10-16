@@ -20,9 +20,6 @@ Below, I have listed an optimal way of reviewing this project:
 3. [How to use the API](TESTING.md)
 4. Remaining TODOs are listed below
 
-If there are any issues or you need permissions, don't hesitate to contact me at olekdlugi@gmail.com.
-
-
 ## Remaining TODOs
 Here is a list of remaining things to do that have not been finished due to time constraints:
 - Set up ElasticSearch to add intelligent search to the products and orders services
